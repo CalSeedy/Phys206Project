@@ -9,7 +9,7 @@ SAMPLERATE = 44100
 TIME = 5
 
 
-listening = False
+listening = False 
 initialised = False
 
 def initialise():
