@@ -21,6 +21,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="analyser.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="GuitarTuner.py" />
     <Compile Include="keyListener.py">
       <SubType>Code</SubType>
