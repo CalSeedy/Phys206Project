@@ -19,7 +19,7 @@
 
 # **Breakdown**
 
-|:Interface:|:Analysis:|:Debugging/ Visuals:|
+| Interface | Analysis | Debugging/ Visuals |
 |:----------------------------------------------------------------------------------------------------------------------------------------:	|:-----------------------------------------------------------------------------------------------------------------------:	|:----------------------------------------------------------------------------------------------------:	|
 | Microphone detection and temp. sound stream storage 	| Take sound as input 	| Format sound data into arrays that correspond to the x and y axis. (time and amplitude respectively) 	|
 | Determine when to start or stop recording 	| Use Fast Fourier Transform to transform data from t-space to frequency-space 	| Plot the above formatted  data 	|
