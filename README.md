@@ -12,7 +12,7 @@
 - [x] ~~connect LCD to Pi~~
 - [x] ~~display text/ arbitrary string to LCD (16 chars max)~~
 - [ ] add menu code
-- [ ] add up, down, select and switch string buttons
+- [x] ~~add up, down, select and switch string buttons~~
 - [ ] link buttons to menu code
 - [ ] link all code
 - [ ] refactor code and centralise
