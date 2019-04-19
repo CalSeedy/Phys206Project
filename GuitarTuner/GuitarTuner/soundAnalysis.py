@@ -1,38 +1,45 @@
-#import globals (shared variables like current string and tuning set)
-#import GPIO module
+import RPi.GPIO as GPIO
 import sharedGlobals as sg
 import pydub as pd
 import numpy as np
 import scipy.signal as sps
 import matplotlib.pyplot as plt
-import ListArrayforFrequencies as allNotes
-import referenceFreqs, math, csv
-from numpy.fft import fft,fftfreq
+import math, csv, serial
+from numpy.fft import fft, fftfreq
 
-class Sound:
+class Sound():
     data = []
+    ser = 0
     
     def __init__(self):
-        self.listening = True
+        self.ser = serial.Serial("/dev/ttyACM0", sg.rate)
 
-    def close(self):
-        self.listening = False
 
     def getData(self):
-        #take input from jack
-        #self.data.append(inp)
-        pass
+        data = []
+        i = 0
+        self.ser.reset_input_buffer()
+        while i < 1024:
+            if self.ser.inWaiting() > 0: 
+                read = self.ser.readline()
+
+                #take byte data, decode it into a string, then get rid of trailing whitespaces
+                value = float(read.decode().rstrip())
+                data.append(value)
+                i += 1
+        sg.data = data 
+        
     
     def run(self):
-        while self.listening:
+        while sg.running:
             #collect data
-            self.getData()
+            #self.getData()
             
             #transform data
-            fftData = self.FFT(self.data)
+            #fftData = self.FFT(self.data)
 
             #analyse data (find peak and compare)
-            self.analyse(fftData)
+            #self.analyse(fftData)
 
     def FFT(self, data):
         # Conner's fft code
@@ -46,11 +53,19 @@ class Sound:
         #true theoretical fft
         fft_theo = 2.0*np.abs(fft_vals/n)
 
-        #FFT Plot
-        plt.figure(2)
-        plt.plot(freqs[mask],fft_theo[mask],label='FFT Values')
-        plt.title('FFT Values')
-        plt.show(block=False)
+##        #FFT Plot
+##        t = []
+##        for i in range(len(data)):
+##            t.append(i / sg.rate)
+##        plt.figure(1)
+##        plt.plot(t, data, label='Original Values')
+##        plt.title('Original Values')
+##        plt.show(block=False)
+        
+##        plt.figure(2)
+##        plt.plot(freqs[mask],fft_theo[mask],label='FFT Values')
+##        plt.title('FFT Values')
+##        plt.show(block=False)
         return freqs, fft_theo
     
     def analyse(self):
@@ -69,7 +84,6 @@ class Sound:
             else:
                 raise Exception("Note (%s) not found in database!" % (note))
                 
-
         def getNearest(frequency):
             closest = []
             pairs = []
@@ -88,22 +102,20 @@ class Sound:
             freq = closest[1]
             return note, freq
 
-
-        # loading sound data                    
-        sound = pd.AudioSegment.from_mp3("../Samples/5th_String_A_64kb.mp3")
-        data = np.fromstring(sound.raw_data, dtype=np.int16)
-        sr = sound.frame_rate
-        ss = sound.sample_width
-        channels = sound.channels
+##        # loading sound data                    
+##        sound = pd.AudioSegment.from_mp3("../Samples/3rd_String_G_64kb.mp3")
+##        data = np.fromstring(sound.raw_data, dtype=np.int16)
+##        sr = sound.frame_rate
+##        ss = sound.sample_width
+##        channels = sound.channels
 
         # FFT
-        freqs, fftData = self.FFT(data)
+        freqs, fftData = self.FFT(self.data)
 
-        #find max
+        # find max
         mx = freqs[np.argmax(fftData)]
         
         print("Maximum at: %f Hz" % (mx))
-
 
         nearest, f_nearest = getNearest(mx) 
         # freq to cents
@@ -111,13 +123,11 @@ class Sound:
         c = 1200 * math.log2(mx / f_nearest)
         print ("offset from closest: %f cents (note: %s)" % (c, nearest))
 
-        sg.tuning = ["E2", "A2", "D3", "G3", "B3", "E4"] # standard tuning
-        sg.string = 2 #1-6, 1 being lowest pitch 
-        ind = sg.tuning[sg.string - 1]
+        #sg.tuning = ["E2", "A2", "D3", "G3", "B3", "E4"] # standard tuning
+        #sg.string = 4 #1-6, 1 being lowest pitch 
+        ind = sg.tuning[sg.string]
         f_tuning = getFrequency(ind)
         a = 1200 * math.log2(mx / f_tuning)
         # +ve offset -> too sharp, -ve -> too flat
         print ("Detected note: %s | Target note: %s | Offset (cents): %f" % (nearest, ind, a) )
 
-s = Sound()
-s.analyse()

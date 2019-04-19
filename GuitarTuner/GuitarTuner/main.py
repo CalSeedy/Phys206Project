@@ -1,34 +1,28 @@
-from threading import Thread
+from threading import Thread, Lock
 import sharedGlobals as sg
-import sys, soundAnalysis#, FFT, Menu, analysis, Input
+import sys, soundAnalysis, Input
 
-global Exit
+threads = []
 
-menu = Menu() #screen display
-inp = Input() #button inputs
-sound = soundAnalysis.Sound() #take sound input and analyse
+#create input and analysis instances
+inp = Input.Input()
+sound = soundAnalysis.Sound()
 
-
-menuThread = Thread(target=menu.run)
-inputThread = Thread(target=inp.run)
+# create thread with those instances and target their run function
+inpThread = Thread(target=inp.run)
 soundThread = Thread(target=sound.run)
 
-menuThread.start()
-inputThread.start()
+# add the threads to the thread list 
+threads.append(inpThread)
+threads.append(soundThread)
+
+# start the threads
+inpThread.start()
 soundThread.start()
 
-Exit = False
-while not Exit:
-    try:
-        inp.read()
-        menu.display(sg.state)
-        sound.run(sg.data)
-    except KeyboardInterrupt:
-        Exit = True
-        
-menu.close()
-inp.close()
-sound.close()
+# wait until both threads are finished
+for i in threads:
+    i.join()
 
-os.exit(0)
+print("Finished")
 

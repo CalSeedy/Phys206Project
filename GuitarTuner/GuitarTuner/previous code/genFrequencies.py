@@ -1,7 +1,7 @@
 import csv
 
 notes = ["C","C#","D","D#","E","F","F#","G","G#","A", "A#","B"]
-octaves = 6
+octaves = 8
 offsets = [x for x in range(-57, (12*octaves) - 57)] #from C0 to B5 (6 complete octaves)
 ref = 440
 
