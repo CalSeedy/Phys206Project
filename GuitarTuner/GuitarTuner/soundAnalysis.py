@@ -1,10 +1,10 @@
 import RPi.GPIO as GPIO
 import sharedGlobals as sg
-import pydub as pd
+#import pydub as pd
 import numpy as np
 import scipy.signal as sps
 import matplotlib.pyplot as plt
-import math, csv, serial
+import math, csv, serial, time
 from numpy.fft import fft, fftfreq
 
 class Sound():
@@ -12,7 +12,9 @@ class Sound():
     ser = 0
     
     def __init__(self):
-        self.ser = serial.Serial("/dev/ttyACM0", sg.rate)
+        self.data = []
+        print("Sound thread: starting ")
+        #self.ser = serial.Serial("/dev/ttyACM0", sg.rate)
 
 
     def getData(self):
@@ -32,6 +34,8 @@ class Sound():
     
     def run(self):
         while sg.running:
+            print("Sound thread: running ")
+            time.sleep(0.1)
             #collect data
             #self.getData()
             

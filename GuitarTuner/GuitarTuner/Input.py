@@ -1,6 +1,6 @@
 import RPi.GPIO as GPIO
 import sharedGlobals as sg
-from threading import Thread
+from multiprocessing import Process
 import time, Menu
 
 class Input():
@@ -10,11 +10,13 @@ class Input():
     pin_NXT = -1
     
     menu = 0
-    menuThread = 0
+    menuProc = 0
 
     def __init__(self):
+        print("Input thread: starting ")
         self.menu = Menu.Menu() #create menu menu
-        self.menuThread = Thread(target=self.menu.run)
+        self.menuProc = Process(target = self.menu.run)
+        sg.procs.append(self.menuProc)
         GPIO.setmode(GPIO.BCM)
         self.pin_UP = 5
         self.pin_DWN = 6
@@ -31,18 +33,24 @@ class Input():
 
     def run(self):
         while sg.running:
-            up = GPIO.input(pin_UP)
-            dwn = GPIO.input(pin_DWN)
-            sel = GPIO.input(pin_SEL)
-            nxt = GPIO.input(pin_NXT)
-    
+            print("Input thread: running ")
+            up = GPIO.input(self.pin_UP)
+            dwn = GPIO.input(self.pin_DWN)
+            sel = GPIO.input(self.pin_SEL)
+            nxt = GPIO.input(self.pin_NXT)
+
+            if self.menu.state == -1:
+                sg.running = False
+            
             if (up):
+                print("up pressed")
                 #change menu
                 if (self.menu.state > 0):
                     self.menu.cycle(0)
                 time.sleep(0.3)
                 
             elif (dwn):
+                print("down pressed")
                 #change menu
                 if (self.menu.state > 0):
                     self.menu.cycle(1)
@@ -53,7 +61,7 @@ class Input():
                 if (self.menu.state > 0) and (self.menu.option[0] == "Exit..."):
                     self.menu.state -= 1
                     
-                elif (self.meun.state == 0):
+                elif (self.menu.state == 0):
                     self.menu.state += 1
                     
                 elif (self.menu.state == 1) and self.menu.options[0] == "Custom Modes":

@@ -12,6 +12,7 @@ class Menu():
     def __init__(self):
         
         #load options
+        print("Sound thread: starting ")
         self.options = ["Guitar Tuner", "Press Select..."]
         self.state = 0
 
@@ -102,6 +103,7 @@ class Menu():
             lcd_init()
             
             while sg.running:
+                print("Menu thread: running ")
                 if (self.state == 0):
                     self.options = ["Guitar Tuner", "Press Select..."]
                 # Send some test
@@ -184,4 +186,4 @@ class Menu():
 
             for i in range(LCD_WIDTH):
                 lcd_byte(ord(message[i]),LCD_CHR)
-        
+        main()
