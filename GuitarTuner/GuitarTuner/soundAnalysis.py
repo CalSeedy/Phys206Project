@@ -10,12 +10,12 @@ from numpy.fft import fft, fftfreq
 class Sound():
     data = []
     ser = 0
+    initialised = False
     
-    def __init__(self):
+    def init(self):
         self.data = []
-        print("Sound thread: starting ")
-        #self.ser = serial.Serial("/dev/ttyACM0", sg.rate)
-
+        self.ser = serial.Serial("/dev/ttyACM0", sg.rate)
+        self.initialised = True
 
     def getData(self):
         data = []
@@ -33,8 +33,11 @@ class Sound():
         
     
     def run(self):
+        if not self.initialised:
+            self.init()
+            
         while sg.running:
-            print("Sound thread: running ")
+            #print("Sound thread: running ")
             time.sleep(0.1)
             #collect data
             #self.getData()
@@ -56,7 +59,6 @@ class Sound():
         fft_vals = fft(data)#self.data)
         #true theoretical fft
         fft_theo = 2.0*np.abs(fft_vals/n)
-
 ##        #FFT Plot
 ##        t = []
 ##        for i in range(len(data)):
@@ -133,5 +135,29 @@ class Sound():
         f_tuning = getFrequency(ind)
         a = 1200 * math.log2(mx / f_tuning)
         # +ve offset -> too sharp, -ve -> too flat
+        GPIO.setup(2,GPIO.OUT)
+        GPIO.setup(3,GPIO.OUT)
+        GPIO.setup(4,GPIO.OUT)
+        GPIO.output(2,GPIO.LOW)
+        GPIO.output(3,GPIO.LOW)
+        GPIO.output(4,GPIO.LOW)
+        
+        if math.abs(a) < 2:
+            GPIO.output(3,GPIO.HIGH)
+            GPIO.output(2,GPIO.LOW)
+            GPIO.output(4,GPIO.LOW)
+
+            
+        elif math.abs(a) > 2:
+            GPIO.output(2,GPIO.HIGH)
+            GPIO.output(3,GPIO.LOW)
+            GPIO.output(4,GPIO.LOW)
+
+        elif math.abs(a) < -2:
+            GPIO.output(4,GPIO.HIGH)
+            GPIO.output(2,GPIO.LOW)
+            GPIO.output(3,GPIO.LOW)
+
+            
         print ("Detected note: %s | Target note: %s | Offset (cents): %f" % (nearest, ind, a) )
 

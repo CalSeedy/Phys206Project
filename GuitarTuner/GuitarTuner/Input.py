@@ -11,12 +11,14 @@ class Input():
     
     menu = 0
     menuProc = 0
-
-    def __init__(self):
-        print("Input thread: starting ")
-        self.menu = Menu.Menu() #create menu menu
+    initialised = False
+    
+    def init(self):
+        #print("Input thread: starting ")
+        self.menu = Menu.Menu() #create menu
         self.menuProc = Process(target = self.menu.run)
         sg.procs.append(self.menuProc)
+        self.menuProc.start()
         GPIO.setmode(GPIO.BCM)
         self.pin_UP = 5
         self.pin_DWN = 6
@@ -30,10 +32,16 @@ class Input():
         GPIO.setup(self.pin_DWN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.setup(self.pin_SEL, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.setup(self.pin_NXT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        self.initialised = True
 
     def run(self):
+        if not self.initialised:
+            self.init()
+            
         while sg.running:
-            print("Input thread: running ")
+            print(sg.options)
+
+            #print("Input thread: running ")
             up = GPIO.input(self.pin_UP)
             dwn = GPIO.input(self.pin_DWN)
             sel = GPIO.input(self.pin_SEL)
@@ -47,18 +55,16 @@ class Input():
                 #change menu
                 if (self.menu.state > 0):
                     self.menu.cycle(0)
-                time.sleep(0.3)
                 
             elif (dwn):
                 print("down pressed")
                 #change menu
                 if (self.menu.state > 0):
                     self.menu.cycle(1)
-                time.sleep(0.3)
                 
             elif (sel):
                 
-                if (self.menu.state > 0) and (self.menu.option[0] == "Exit..."):
+                if (self.menu.state > 0) and (self.menu.options[0] == "Exit..."):
                     self.menu.state -= 1
                     
                 elif (self.menu.state == 0):
@@ -66,19 +72,19 @@ class Input():
                     
                 elif (self.menu.state == 1) and self.menu.options[0] == "Custom Modes":
                     self.menu.state = 5 #custom mode state
-                    options = self.menu.loadCustoms()
+                    self.menu.options = self.menu.loadCustoms()
                     
                 elif (self.menu.state == 1) and self.menu.options[0] == "Preset Modes":
                     self.menu.state = 2 #preset mode state
-                    options = self.menu.loadPresets()
+                    self.menu.options = self.menu.loadPresets()
                     
-                time.sleep(0.3)
                 
             elif (nxt):
                 #change menu
                 if (self.menu.state == 2): 
                     sg.string = (sg.string + 1) % 6
-                time.sleep(0.3)
+            
+            time.sleep(0.3)
     
 
 

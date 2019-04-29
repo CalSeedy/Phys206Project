@@ -1,73 +1,104 @@
+#import necessary modules and files
 from threading import Thread
 import RPi.GPIO as GPIO
 import sharedGlobals as sg
 import time, csv
 
+#create a menu class that will control the output to the LCD screen and what options are currently available
 class Menu():
-    options = []
+    #initialise empty/default values for cycle patterns and states
     upPattern = []
     downPattern = []
     state = 0
+    initialised = False
     
-    def __init__(self):
+    #init function sets the initial values for the menu
+    def init(self):
+        #set common options for initial screen for the tuner
+        sg.options = ["Guitar Tuner", "Press Select..."]
         
-        #load options
-        print("Sound thread: starting ")
-        self.options = ["Guitar Tuner", "Press Select..."]
+        #initial state is 0 (starting screen)
         self.state = 0
+        
+        #acknowledge when initialised
+        self.initialised = True
 
+    #cycle function takes a direction, 0 = up / 1 = down and cycles the options either 1 up or 1 down
     def cycle(self, direction):
+        #create a local storage for the cycle pattern
         pattern = []
+        
+        #make sure that the patterns for each direction have been defined
         if len(self.upPattern) == 0 or len(self.downPattern) == 0:
+            #if not, raise an error, we can't continue
             raise Exception("Pattern(s) not set...")
         else:
+            #if so, and the direction is up... cycle the options with the up pattern
             if (direction == 0):
                 pattern = self.upPattern
+                
+            #if so, and the direction is down... cycle the options with the down pattern
             elif (direction == 1):
                 pattern = self.downPattern
+            #if so, and the direction isn't 1 or 0... raise an error, we can't continue with that
             else:
                 raise Exception("Expected 0 or 1, received %s" % (str(direction)))
-            
-        self.options = [self.options[i] for i in pattern]
-
+        
+        #store the new local options in the shared options variable
+        sg.options = [sg.options[i] for i in pattern]
+    
+    #loadCustoms function takes all user created tuning sets and loads them into the options variable
     def loadCustoms():
+        #try to load the custom tunings csv
         try:
             with open("customs.csv", "r") as readFile:
                 reader = csv.reader(readFile)
-                i = 1
                 options = []
+                #look at every row and split the string into the tuning name and the notes
                 for row in readFile:
                     row = row.split(",")
-                    #print("Loading option: %s ...(%d/%d)" % (row[0], i, count))
-                    options.append(row[1], row[2], row[3], row[4], row[5], row[6])
-                    i += 1
+                    #append (add) tuning name to list of options
+                    options.append(row[0])
+                    
                 readFile.close()
-            self.options = options + ["Exit..."]
-            if len(self.options):
-                self.downPattern = [(x+1) for x in range(len(self.options)-1)] + [0]
-                self.upPattern = [len(self.options) - 1] + [x for x in range(len(self.options)-1)]
-        
+            #set shared options variable to the list we created, with an "Exit" added on the end
+            sg.options = options + ["Exit..."]
+            
+            #generate the up and down cycle patterns for the loaded list of options
+            if len(sg.options):
+                self.downPattern = [(x+1) for x in range(len(sg.options)-1)] + [0]
+                self.upPattern = [len(sg.options) - 1] + [x for x in range(len(sg.options)-1)]
+                
+        #if there is no custom tunings file, we cant continue
         except Exception:
             raise("custom mode file doesn't exit...\nCreate new 'customs.csv' file")
 
-
+    #loadPresets function loads the preset tuning modes and adds them to the shared options variable
     def loadPresets():
-        
+                
+        #load the preset tunings csv
         with open("tunings.csv", "r") as readFile:
             reader = csv.reader(readFile)
-            tunings = []            
+            tunings = []
+            #for every row, append the name of the tuning
             for row in readFile:
                 row = row.split(",")
                 tunings.append(row[0])
             readFile.close()
             
-            self.options = tunings + ["Exit..."]
+            #set the shared options to the tuning list + an "Exit" option
+            sg.options = tunings + ["Exit..."]
             
-            self.downPattern = [(x+1) for x in range(len(self.options)-1)] + [0]
-            self.upPattern = [len(self.options) - 1] + [x for x in range(len(self.options)-1)]
+            #generate the up and down patterns from preset options
+            self.downPattern = [(x+1) for x in range(len(sg.options)-1)] + [0]
+            self.upPattern = [len(sg.options) - 1] + [x for x in range(len(sg.options)-1)]
     
-        
+    #run function runs constantly while the menu is needed to be displayed
     def run(self):
+        #if the menu isn't initialised, initialise it and continue
+        if not self.initialised:
+            self.init()
+            
         # Define GPIO to LCD mapping
         LCD_RS = 7
         LCD_E  = 8
@@ -88,7 +119,7 @@ class Menu():
         E_PULSE = 0.0005
         E_DELAY = 0.0005
          
-        def main(self):
+        def main():
             # Main program block
             GPIO.setwarnings(False)
             GPIO.setmode(GPIO.BCM)       # Use BCM GPIO numbers
@@ -102,14 +133,21 @@ class Menu():
             # Initialise display
             lcd_init()
             
+            #while we want to be displaying data
             while sg.running:
-                print("Menu thread: running ")
+                
+                #if we are on the initial screen
                 if (self.state == 0):
-                    self.options = ["Guitar Tuner", "Press Select..."]
-                # Send some test
-                if len(options) > 2:
-                    lcd_string(options[0], LCD_LINE_1)
-                    lcd_string(options[1], LCD_LINE_2)
+                    #set the shared options variable to the starting list
+                    sg.options = ["Guitar Tuner", "Press Select..."]
+                    
+                #if there are options to display, show the 1st two on separate lines
+                if len(sg.options) > 0:
+                    lcd_string(sg.options[0], LCD_LINE_1)
+                    lcd_string(sg.options[1], LCD_LINE_2)
+                else:
+                    lcd_string("Error", LCD_LINE_1)
+                    lcd_string("len(options) = 0", LCD_LINE_2)
                 time.sleep(0.1)
             lcd_byte(0x01, LCD_CMD)
             lcd_string("Goodbye!",LCD_LINE_1)
