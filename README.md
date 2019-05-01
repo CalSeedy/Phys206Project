@@ -1,22 +1,25 @@
 # **Dependencies**
-- matplotlib
-- numpy
-- pyaudio
-- pynput
+- scipy (.signal, numpy and matplotlib)
+- pydub (for now)
 
 # **TODO**
 - [x] ~~add 'listening' functionality~~ 
-- [ ] connect to Raspberry Pi 
-- [ ] transform data (Fourier)
-- [ ] plot data (original / transformed)
-- [ ] analyse data (find fundamental)
-- [ ] add 6-string functionality for standard tuning
-- [ ] we'll see when we're here...
-
+- [x] ~~connect to Raspberry Pi~~
+- [x] ~~transform data (Fourier)~~
+- [x] ~~plot data (original / transformed)~~
+- [x] ~~analyse data (find fundamental)~~
+- [x] ~~add 6-string functionality for standard tuning~~
+- [x] ~~connect LCD to Pi~~
+- [x] ~~display text/ arbitrary string to LCD (16 chars max)~~
+- [ ] add menu code
+- [x] ~~add up, down, select and switch string buttons~~
+- [ ] link buttons to menu code
+- [ ] link all code
+- [ ] refactor code and centralise
 
 # **Breakdown**
 
-| Interface 	| Analysis 	| Debugging/ Visuals 	|
+| Interface | Analysis | Debugging/ Visuals |
 |:----------------------------------------------------------------------------------------------------------------------------------------:	|:-----------------------------------------------------------------------------------------------------------------------:	|:----------------------------------------------------------------------------------------------------:	|
 | Microphone detection and temp. sound stream storage 	| Take sound as input 	| Format sound data into arrays that correspond to the x and y axis. (time and amplitude respectively) 	|
 | Determine when to start or stop recording 	| Use Fast Fourier Transform to transform data from t-space to frequency-space 	| Plot the above formatted  data 	|
